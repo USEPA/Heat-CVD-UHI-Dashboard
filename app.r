@@ -16,6 +16,10 @@ library(DT)
 library(dplyr)
 library(shinycssloaders)
 
+
+#setwd('L:\\Lab\\CPHEA_TempUHI\\SCleland\\Dashboard')
+#setwd('C:\\Users\\SCLELA01\\OneDrive - Environmental Protection Agency (EPA)\\Profile\\Documents\\Dashboard_Temp')
+
 # Define color palettes
 palettes <- data.frame("Variable" = c("uhi","uhiq","hosp","temp","range","temp.99"), 
                        "Color" = c("RdYlBu","RdYlBu","PuRd","RdYlBu","Purple-Green","Heat"))
@@ -892,7 +896,7 @@ server <- function(input, output,session) {
     names(table) <- c("Group","# MSAs","# ZIP Codes","# Hospitalizations (% Total)", "99th Temp. Percentile (\u00b0C)",
                       "MHP (95% CI)","MHT (\u00b0C) (95% CI)","RR (99th vs. MHP) (95% CI)",
                       "AN (Temp. \u2265 MHP) (95% CI)","AF (%) (95% CI)", "AR (Annual, per 100k) (95% CI)",
-                      "AN, % Extreme Heat")
+                      "AN, % Extreme Temps")
     
     type = "Exposure and outcome information and heat-related cardiovascular risk and burden results"
     if (input$subpop == "All") {
@@ -921,7 +925,7 @@ server <- function(input, output,session) {
       }
     }
     
-    caption = paste0(caption," MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AF = Heat-Attributable Fraction; AR = Heat-Attributable Rate.")
+    caption = paste0(caption," MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AF = Heat-Attributable Fraction; AR = Heat-Attributable Rate; % Extreme Temps = % of AN due to extreme temperatures (above 97.5th percentile).")
     
     DT::datatable(table,
                   options = list(paging = T,searching = T,dom='t',ordering=T,scrollX = TRUE,
@@ -1029,7 +1033,7 @@ server <- function(input, output,session) {
       if (input$forest_type == "UHII") {
         xlim = c(-2600,4100)
       } else {
-        xlim = c(-4050,12000)
+        xlim = c(-4050,12005)
       }
       rounding = 0
     } else if (input$forest_variable == "af.heat") {
@@ -1187,15 +1191,16 @@ server <- function(input, output,session) {
       if (input$forest_type == "UHII") {
         forest.temp <- forest.temp + geom_point(position=dodge) + 
           geom_errorbarh(height=2,size=tck_size,position=dodge) + theme_bw(base_size=10) + 
-          geom_vline(xintercept=xline, color='black', linetype='dashed', alpha=.5) +
           theme(axis.title.y = element_blank()) +
           xlab(xlab)
       } else {
         forest.temp <- forest.temp + geom_point() + 
           geom_errorbarh(height=2,size=tck_size) + theme_bw(base_size=10) + 
-          geom_vline(xintercept=xline, color='black', linetype='dashed', alpha=.5) +
           theme(axis.title.y = element_blank()) +
           xlab(xlab)
+      }
+      if (input$forest_variable != "mht") {
+        forest.temp <- forest.temp + geom_vline(xintercept=xline, color='black', linetype='dashed', alpha=.5)
       }
     }
     
@@ -1602,13 +1607,7 @@ server <- function(input, output,session) {
       "For any questions, please email: <a href='mailto:cleland.stephanie@epa.gov'>cleland.stephanie@epa.gov</a> or <a href='mailto:rappold.ana@epa.gov'>rappold.ana@epa.gov</a>.",
       "<br><br>",
       "<b>Abstract</b>",
-      "<br><i>Background.</i> The United States (US) population largely resides in urban areas where climate change is projected to increase temperatures and the frequency of heat events. Extreme heat has been linked to increased cardiovascular disease (CVD) risk, yet little is known about this association across urban heat islands (UHIs).",
-      "<br><i>Objective.</i> To identify the US urban populations at the highest risk of heat-related CVD morbidity and characterize the heat-attributable burden.",
-      "<br><i>Methods.</i> We obtained daily counts of CVD hospitalizations among Medicare enrollees, aged 65-114, in 120 metropolitan statistical areas (MSAs) in the contiguous US between 2000-2017. Local average temperatures were estimated by interpolating daily monitor observations. ",
-      "A quasi-Poisson regression with distributed lag non-linear models was applied to estimate MSA-specific associations between temperature and hospitalization. These associations were pooled using multivariate meta-analyses. Stratified analyses were performed by age, sex, race, and chronic condition status in low and high UHI intensity (UHII) areas, estimated from satellite-derived temperatures in urban versus non-urban areas. We also calculated the number of CVD hospitalizations attributable to heat. ",
-      "<br><i>Results.</i> Extreme heat (99th percentile, ~28.6C) increased CVD hospitalization risk by 1.5% (95% CI: 0.4%, 2.6%), with considerable MSA-to-MSA variation. There were an estimated 37,028 (95% CI: 35,741, 37,988) heat-attributable admissions, with most due to extreme temperatures. The risk difference between high and low UHII areas was 1.4% (2.4% [95% CI: 0.4%, 4.3%] in high vs. 1.0% [95% CI: -0.8%, 2.8%] in low). ",
-      "High UHII accounted for 35% of the total burden and disproportionately impacted already heat-vulnerable populations, with a higher heat-related risk and burden among female, Black, and older (age 75-114) enrollees and those with diabetes and chronic kidney disease.",
-      "<br><i>Conclusions.</i> Extreme heat increases the risk and burden of cardiovascular morbidity among older adults in US urban areas. UHIs exacerbate the adverse impacts of heat, especially among those with existing vulnerabilities.",
+      "<br>The United States (US) population largely resides in metropolitan areas experiencing urban heat islands (UHIs) and climate change-driven temperature increases. Extreme heat has been linked to increased cardiovascular disease (CVD) risk, yet little is known about how this association varies between cities or with UHI intensity (UHII). We aimed to identify the US urban populations most at-risk of and burdened by heat-related CVD morbidity while considering the role of UHII. ZIP code-level daily counts of CVD hospitalizations among Medicare enrollees, aged 65-114, were obtained for 120 US metropolitan statistical areas (MSAs) between 2000-2017. Local average temperatures were estimated by interpolating daily weather station observations. ZIP codes were stratified into low and high UHII areas using the first and fourth UHII quartiles with an equal number of hospitalizations. MSA-specific associations between temperature and hospitalization were estimated using quasi-Poisson regression with distributed lag non-linear models and pooled via multivariate meta-analyses. Stratified analyses were performed by age, sex, race, and chronic condition status in low and high UHII areas. We also calculated the CVD hospitalizations attributable to heat. Extreme heat (MSA-specific 99th percentile, ~28.6C) increased CVD hospitalization risk by 1.5% (95% CI: 0.4%, 2.6%), with considerable variation among MSAs. Between 2000-2017, there were an estimated 37,028 (95% CI: 35,741, 37,988) heat-attributable admissions, with most due to extreme temperatures. Risk in high UHII areas (2.4% [95% CI: 0.4%, 4.3%]) exceeded that in low UHII areas (1.0% [95% CI: -0.8%, 2.8%]). High UHII areas accounted for 35% of the total heat-related burden and disproportionately impacted already heat-vulnerable populations. The most at-risk and burdened populations were females, individuals aged 75-114, those with chronic kidney disease or diabetes living in high UHII areas. Overall, extreme heat increased cardiovascular morbidity risk and burden among older urban populations. UHIs exacerbated these heat-related impacts, especially among those with existing vulnerabilities.",
       "<br><br>",
       "<b>Authors:</b> Stephanie E. Cleland, William Steinhardt, Lucas M. Neas, J. Jason West, Ana G. Rappold"
     )  

@@ -16,6 +16,7 @@ library(DT)
 library(dplyr)
 library(shinycssloaders)
 
+
 # Define color palettes
 palettes <- data.frame("Variable" = c("uhi","uhiq","hosp","temp","range","temp.99"), 
                        "Color" = c("RdYlBu","RdYlBu","PuRd","RdYlBu","Purple-Green","Heat"))
@@ -699,7 +700,7 @@ server <- function(input, output,session) {
     
     ### FOREST PLOT
     data.forest <- sub_rr_af_an[,c(1:11,15:17)];  names(data.forest) <- c(names(data.forest)[1:11],"RR","RR.low","RR.high")
-    data.forest$variable <- rep("Relative Risk (99th vs. MHP)",nrow(data.forest))
+    data.forest$variable_name <- rep("Relative Risk (99th vs. MHP)",nrow(data.forest))
     data.forest[,c("RR","RR.low","RR.high","cen.metareg")] <- sapply( data.forest[,c("RR","RR.low","RR.high","cen.metareg")],as.numeric)
     data.forest <- data.forest[data.forest$type == input$sub & data.forest$group == input$subpop,]
     data.forest$uhigroup <- ifelse(data.forest$subtype == "Primary","Overall",ifelse(data.forest$subtype=="Q1","Low UHII","High UHII"))
@@ -728,7 +729,7 @@ server <- function(input, output,session) {
     }
     
     facet.name <- c( "Relative Risk (99th vs. MHP)" =  "Relative Risk\n(99th vs. MHP)")
-    forest.pooled <- ggplot(data=data.forest[data.forest$variable == "Relative Risk (99th vs. MHP)", ], 
+    forest.pooled <- ggplot(data=data.forest[data.forest$variable_name == "Relative Risk (99th vs. MHP)", ], 
                             aes(x=label,y=RR, ymin=RR.low, ymax=RR.high,color=.data[[col.val]],shape=.data[[col.val]],
                                 text = paste0("<b>",label2,"</b>",
                                               '<br><b>',hover.lab,":</b> ", format(round(RR,rounding),rounding)," (",
@@ -739,7 +740,7 @@ server <- function(input, output,session) {
       scale_color_manual(values=pal) + 
       geom_errorbar(width=0.1,position=pd) + theme_bw(base_size=10) + 
       geom_hline(yintercept=xline, color='black', linetype='dashed', alpha=.5) +
-      ylab(ylab) + facet_wrap(~variable,labeller = as_labeller(facet.name)) +
+      ylab(ylab) + facet_wrap(~variable_name,labeller = as_labeller(facet.name)) +
       theme(axis.title.x = element_blank(),
             strip.background = element_rect(fill = "white",color="white"),
             strip.text = element_text(angle=0,face="bold"),

@@ -16,14 +16,10 @@ library(DT)
 library(dplyr)
 library(shinycssloaders)
 
-
-#setwd('L:\\Lab\\CPHEA_TempUHI\\SCleland\\Dashboard')
-#setwd('C:\\Users\\SCLELA01\\OneDrive - Environmental Protection Agency (EPA)\\Profile\\Documents\\Dashboard_Temp')
-
 # Define color palettes
 palettes <- data.frame("Variable" = c("uhi","uhiq","hosp","temp","range","temp.99"), 
                        "Color" = c("RdYlBu","RdYlBu","PuRd","RdYlBu","Purple-Green","Heat"))
-palettes_cbsa <- data.frame("Variable" = c("rr.99","an.heat","af.heat","mht","ar.heat"), 
+palettes_cbsa <- data.frame("CBSAVariable" = c("rr.99","an.heat","af.heat","mht","ar.heat"), 
                             "Color" = c("Geyser","Fall","TealRose","Temps","ArmyRose"))
 sub_palettes <- list("PrimaryAll" = "black",
                      "UHIIAll" = c("#5385BC","#E34D34"),
@@ -368,7 +364,7 @@ server <- function(input, output,session) {
       cbsas_shape <- cbsas_shape_full[cbsas_shape_full$group == input$forest_type,]
       
       pal <- colorBin(
-        palette = hcl.colors(8,palettes_cbsa[palettes_cbsa$Variable==input$forest_variable,2]),
+        palette = hcl.colors(8,palettes_cbsa[palettes_cbsa$CBSAVariable==input$forest_variable,2]),
         bins = bins,
         reverse=rev
       )

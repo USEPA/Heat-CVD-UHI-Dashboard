@@ -17,11 +17,14 @@ library(dplyr)
 library(shinycssloaders)
 
 
+#setwd('L:\\Lab\\CPHEA_TempUHI\\SCleland\\Dashboard')
+#setwd('C:\\Users\\SCLELA01\\OneDrive - Environmental Protection Agency (EPA)\\Profile\\Documents\\Dashboard_Temp')
+
 # Define color palettes
 palettes <- data.frame("Variable" = c("uhi","uhiq","hosp","temp","range","temp.99"), 
                        "Color" = c("RdYlBu","RdYlBu","PuRd","RdYlBu","Purple-Green","Heat"))
-palettes_cbsa <- data.frame("CBSAVariable" = c("rr.99","an.heat","af.heat","mht","ar.heat"), 
-                            "Color" = c("Geyser","Fall","TealRose","Temps","ArmyRose"))
+palettes_cbsa <- data.frame("CBSAVariable" = c("rr.99","an.heat","mht","ar.heat"), 
+                            "Color" = c("Geyser","Fall","Temps","TealRose"))
 sub_palettes <- list("PrimaryAll" = "black",
                      "UHIIAll" = c("#5385BC","#E34D34"),
                      "PrimaryCKD" = c("#CC99BB","#771155"),
@@ -136,7 +139,6 @@ ui <- navbarPage("Dashboard",id="tabs",selected="Overall & Subpopulation Results
                                        radioButtons("forest_variable", tags$span(style = "font-weight: bold;", "Variable:"),
                                                     c("RR (99th vs. MHP)" = "rr.99",
                                                       "Heat AN (Temp. >= MHP)" = "an.heat",
-                                                      "Heat AF (%)" = "af.heat",
                                                       "Heat AR (per 100k)" = "ar.heat",
                                                       "MHT (\u00b0C)" = "mht"
                                                     )),
@@ -345,11 +347,6 @@ server <- function(input, output,session) {
           labs <- c("< -250","-250-0","0-250","250-500","500-750","> 750")
         }
         rounding=0
-      } else if (input$forest_variable == "af.heat") {
-        x="heat_af";xmin="heat_af_lower";xmax="heat_af_upper";leg_lab="AF (%)";hover.lab = "AF (95% CI)"
-        bins <- c(-1,-0.1,0,0.1,0.2,0.3,1)
-        labs <- c("< -0.1","-0.1-0.0","0.0-0.1","0.1-0.2","0.2-0.3","> 0.3")
-        rounding=3
       } else if (input$forest_variable == "ar.heat") {
         x="ann_an_rate100k";xmin="ann_an_rate100k_lower";xmax="ann_an_rate100k_upper";leg_lab="AR (per 100k)";hover.lab = "AR (95% CI)"
         bins <- c(-100,-5,0,5,15,25,150)
@@ -872,7 +869,7 @@ server <- function(input, output,session) {
     
     table <- sub_rr_af_an[sub_rr_af_an$type == input$sub&sub_rr_af_an$group == input$subpop,
                           c("group_lab","n.cbsas","Num_Zips","Total_HAs","temp.99",
-                            "mhp","mht","RR.99.full","Attr_HAs_Heat","AF_All_Heat","Ann_AN_Rate100k","per_HA_xheat")]
+                            "mhp","mht","RR.99.full","Attr_HAs_Heat","Ann_AN_Rate100k")]
     
     table[is.na(table)] <- "-"
     
@@ -892,8 +889,7 @@ server <- function(input, output,session) {
     
     names(table) <- c("Group","# MSAs","# ZIP Codes","# Hospitalizations (% Total)", "99th Temp. Percentile (\u00b0C)",
                       "MHP (95% CI)","MHT (\u00b0C) (95% CI)","RR (99th vs. MHP) (95% CI)",
-                      "AN (Temp. \u2265 MHP) (95% CI)","AF (%) (95% CI)", "AR (Annual, per 100k) (95% CI)",
-                      "AN, % Extreme Temps")
+                      "AN (Temp. \u2265 MHP) (95% CI)", "AR (Annual, per 100k) (95% CI)")
     
     type = "Exposure and outcome information and heat-related cardiovascular risk and burden results"
     if (input$subpop == "All") {
@@ -922,7 +918,7 @@ server <- function(input, output,session) {
       }
     }
     
-    caption = paste0(caption," MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AF = Heat-Attributable Fraction; AR = Heat-Attributable Rate; % Extreme Temps = % of AN due to extreme temperatures (above 97.5th percentile).")
+    caption = paste0(caption," MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AR = Heat-Attributable Rate")
     
     DT::datatable(table,
                   options = list(paging = T,searching = T,dom='t',ordering=T,scrollX = TRUE,
@@ -942,9 +938,9 @@ server <- function(input, output,session) {
   # Bulleted list of the main takeaways
   output$main_takeaway <- renderText({
     "<ul>
-  <li>Higher heat-related risk and burden in high UHII areas</li>
-  <li>Black, female, and older individuals and those with CKD or diabetes had an elevated risk and burden</li>
-  <li>High UHII had a more pronounced impact among already heat-vulnerable subpopulations</li>
+  <li>Notably larger heat-related burden in high UHII areas, attributed to a moderately higher risk</li>
+  <li>Females, individuals aged 75-114, those with CKD, and those with diabetes had an elevated heat-related risk and burden</li>
+  <li>High UHII exacerbated heat-related impacts among already heat-vulnerable subpopulations</li>
   <li>Heat posed a delayed, rather than immediate, threat</li>
   </ul>"
   })
@@ -1033,11 +1029,6 @@ server <- function(input, output,session) {
         xlim = c(-4050,12005)
       }
       rounding = 0
-    } else if (input$forest_variable == "af.heat") {
-      x="heat_af";xmin="heat_af_lower";xmax="heat_af_upper";xline=0;alpha.val=1
-      xlab = "Heat-Attributable Fraction [AF] (%, AN/Total Admits)";hover.lab = "AF (95% CI)"
-      xlim = c(-0.95, 0.95)
-      rounding = 3
     } else if (input$forest_variable == "ar.heat") {
       x="ann_an_rate100k";xmin="ann_an_rate100k_lower";xmax="ann_an_rate100k_upper";xline=0;alpha.val=0.85
       xlab = "Heat-Attributable Rate [AR] (per 100,000 beneficiaries)";hover.lab = "AR (95% CI)"
@@ -1491,7 +1482,6 @@ server <- function(input, output,session) {
     
     table$per_x_heat <- paste0(round((table$x_heat_an/table$heat_an)*100,1),"")
     table$RR.99 <- paste0(format(round(table$RR.99,3),3), " (",format(round(table$RR.99.low,3),3),", ",format(round(table$RR.99.high,3),3),")")
-    table$heat_af <- paste0(format(round(table$heat_af,3),3), " (",format(round(table$heat_af_lower,3),3),", ",format(round(table$heat_af_upper,3),3),")")
     table$heat_an <- paste0(format(round(table$heat_an,0),big.mark=',',trim=T), " (",
                             format(round(table$heat_an_lower,0),big.mark=',',trim=T),", ",
                             format(round(table$heat_an_upper,0),big.mark=',',trim=T),")")
@@ -1533,13 +1523,13 @@ server <- function(input, output,session) {
     table <- data.frame(label=colnames(table),data=t(table))
     
     table <- table[c("n.zips","tot_hosp_per_lab","temp.99",
-                     "mhp","mht","RR.99","heat_an","heat_af","heat_ar"),]
+                     "mhp","mht","RR.99","heat_an","heat_ar"),]
     
     rownames(table) <- NULL
     
     table$label <- c("<b># ZIP Codes</b>","<b># Hospitalizations (% Total)</b>","<b>99th Temp. %ile (\u00b0C)</b>",
                      "<b>MHP (95% CI)</b>","<b>MHT (\u00b0C) (95% CI)</b>","<b>RR (99th vs. MHP) (95% CI)</b>",
-                     "<b>AN (Temp. \u2265 MHP) (95% CI)</b>","<b>AF (%) (95% CI)</b>","<b> AR (Annual, per 100k) (95% CI)</b>")
+                     "<b>AN (Temp. \u2265 MHP) (95% CI)</b>","<b> AR (Annual, per 100k) (95% CI)</b>")
     
     if (input$forest_type=="Primary") {
       caption = paste0('Exposure and outcome information and heat-related cardiovascular risk and burden results for ',input$cbsa_choice,', 2000-2017.')
@@ -1558,7 +1548,7 @@ server <- function(input, output,session) {
                       " and has a climate type of: ", 
                       unique(cbsa_all[cbsa_all$CBSA.Title==input$cbsa_choice & cbsa_all$group == input$forest_type,]$Koppen.Description))
     
-    caption <- paste0(caption, ". MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AF = Heat-Attributable Fraction; AR = Heat-Attributable Rate.")
+    caption <- paste0(caption, ". MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AR = Heat-Attributable Rate.")
     DT::datatable(table, 
                   options = list(paging = FALSE,searching = FALSE,dom='t',ordering=F),
                   
@@ -1578,8 +1568,8 @@ server <- function(input, output,session) {
   # Bulleted list of key takeaways
   output$msa_takeaway <- renderText({
     "<ul>
-  <li>Significant variation in the MSA-level risk and burden, overall and by UHII level</li>
-  <li>No clear geographic pattern for which MSAs had the highest heat-related risk and burden</li>
+  <li>Considerable variation in the MSA-level risk and burden, overall and by UHII level</li>
+  <li>No clear geographic trend for which MSAs had the highest heat-related risk and burden</li>
   <li>Overall: 66% of MSAs had a RR (99th vs. MHP) > 1 </li>
   <li>Low UHII: 60% of MSAs had a RR (99th vs. MHP) > 1 </li>
   <li>High UHII: 78% of MSAs had a RR (99th vs. MHP) > 1 </li>
@@ -1594,7 +1584,7 @@ server <- function(input, output,session) {
   output$about_text <- renderText({
     paste0(
       "This dashboard is associated with the manuscript <b><i>Urban Heat Island Impacts on Heat-Related Cardiovascular Morbidity: A Time Series Analysis of Older Adults in US Metropolitan Areas</i></b>.",
-      " It allows for interaction with the manuscript's primary results - the heat-related cardiovascular risk and burden across the urban cores of 120 contiguous US metropolitan statistical areas (MSAs), 2000-2017. The results are available for the entire study population, different subpopulations, and in low and high urban heat island intensity (UHII) areas ('Overall & Subpopulation Results' tab).",
+      " It allows for interaction with the manuscript's primary results - the heat-related cardiovascular risk and burden, in urban heat islands (UHIs) compared non-UHIs, in 120 contiguous US metropolitan statistical areas (MSAs), 2000-2017. The results are available for the entire study population, different subpopulations, and in low and high UHI intensity (UHII) areas ('Overall & Subpopulation Results' tab).",
       " It also allows for interaction with the MSA-level risk and burden, overall and in low and high UHII areas ('MSA-Specific Results' tab).", 
       " All results can be downloaded on their respective tabs.",
       " Additionally, users can explore the ZIP code-level temperature, UHII, and Medicare hospitalization data used in the analyses ('Exposure & Outcome Maps').",
@@ -1604,7 +1594,7 @@ server <- function(input, output,session) {
       "For any questions, please email: <a href='mailto:cleland.stephanie@epa.gov'>cleland.stephanie@epa.gov</a> or <a href='mailto:rappold.ana@epa.gov'>rappold.ana@epa.gov</a>.",
       "<br><br>",
       "<b>Abstract</b>",
-      "<br>Many people in the United States (US) reside in cities experiencing urban heat islands (UHIs) and climate change-driven temperature increases. Extreme heat has been linked to increased cardiovascular disease (CVD) risk, yet little is known about how this association varies between cities or with UHI intensity (UHII) within cities. We aimed to identify the urban populations most at-risk of and burdened by heat-related CVD morbidity while considering the role of UHII. ZIP code-level daily counts of CVD hospitalizations among Medicare enrollees, aged 65-114, were obtained for 120 US metropolitan statistical areas (MSAs) between 2000-2017. Local average temperatures were estimated by interpolating daily weather station observations. ZIP codes were stratified into low and high UHII areas using the first and fourth UHII quartiles, each with 25% of all hospitalizations. MSA-specific associations between temperature and hospitalization were estimated using quasi-Poisson regression with distributed lag non-linear models and pooled via multivariate meta-analyses. Stratified analyses were performed by age, sex, race, and chronic condition status in low and high UHII areas. We also calculated the heat-attributable CVD burden. Extreme heat (MSA-specific 99th percentile, ~28.6C) increased CVD hospitalization risk by 1.5% (95% CI: 0.4%, 2.6%), with considerable variation among MSAs. Between 2000-2017, there were an estimated 37,028 (95% CI: 35,741, 37,988) heat-attributable admissions, with most due to extreme temperatures. Risk in high UHII areas (2.4% [95% CI: 0.4%, 4.3%]) exceeded that in low UHII areas (1.0% [95% CI: -0.8%, 2.8%]). High UHII areas accounted for 35% of the total heat-related burden and disproportionately impacted already heat-vulnerable populations. The most at-risk and burdened populations were females, individuals aged 75-114, and those with chronic kidney disease or diabetes living in high UHII areas. Overall, extreme heat increased cardiovascular morbidity risk and burden among older urban populations. UHIs exacerbated these heat-related impacts, especially among those with existing vulnerabilities.",
+      "<br>Many cities in the United States (US) are experiencing urban heat islands (UHIs) and climate change-driven temperature increases. Extreme heat increases cardiovascular disease (CVD) risk, yet little is known about how this association varies with UHI intensity (UHII) within and between cities. We aimed to identify the urban populations most at-risk of and burdened by heat-related CVD morbidity in UHIs compared to non-UHIs. ZIP code-level daily counts of CVD hospitalizations among Medicare enrollees, aged 65-114, were obtained for 120 US metropolitan statistical areas (MSAs) between 2000-2017. Local average temperatures were estimated by interpolating daily weather station observations. ZIP codes were classified as low and high UHII areas using the first and fourth UHII quartiles, weighted to each have 25% of all hospitalizations. MSA-specific associations between temperature and hospitalization were estimated using quasi-Poisson regression with distributed lag non-linear models and pooled via multivariate meta-analyses. We also calculated the heat-attributable CVD burden. Across the contiguous US, extreme heat (MSA-specific 99th percentile, ~28.6\u00b0C) increased CVD hospitalization risk by 1.5% (95% CI: 0.4%, 2.6%), with considerable variation among MSAs. Extreme heat-related CVD risk in high UHII areas (2.4% [95% CI: 0.4%, 4.3%]) exceeded that in low UHII areas (1.0% [95% CI: -0.8%, 2.8%]), with upwards of a 10% difference in some MSAs. During the 18-year study period, there were an estimated 37,028 (95% CI: 35,741, 37,988) heat-attributable admissions. High UHII areas accounted for 35% of the total heat-related burden, while low UHII areas accounted for 4%. High UHII disproportionately impacted already heat-vulnerable populations; females, individuals aged 75-114, and those with chronic conditions living in high UHII areas experienced the largest heat-related impacts. Overall, extreme heat increased cardiovascular morbidity risk and burden in older urban populations, with UHIs exacerbating these impacts among those with existing vulnerabilities.",
       "<br><br>",
       "<b>Authors:</b> Stephanie E. Cleland, William Steinhardt, Lucas M. Neas, J. Jason West, Ana G. Rappold"
     )  

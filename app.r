@@ -17,23 +17,40 @@ library(dplyr)
 library(shinycssloaders)
 
 
+#setwd('L:\\Lab\\CPHEA_TempUHI\\SCleland\\Dashboard')
+#setwd('C:\\Users\\SCLELA01\\OneDrive - Environmental Protection Agency (EPA)\\Profile\\Documents\\Dashboard_Temp')
+
 # Define color palettes
 palettes <- data.frame("Variable" = c("uhi","uhiq","hosp","temp","range","temp.99"), 
                        "Color" = c("RdYlBu","RdYlBu","PuRd","RdYlBu","Purple-Green","Heat"))
-palettes_cbsa <- data.frame("CBSAVariable" = c("rr.99","an.heat","af.heat","mht","ar.heat"), 
-                            "Color" = c("Geyser","Fall","TealRose","Temps","ArmyRose"))
+palettes_cbsa <- data.frame("CBSAVariable" = c("rr.99","an.heat","mht","ar.heat"), 
+                            "Color" = c("Geyser","Fall","Temps","TealRose"))
 sub_palettes <- list("PrimaryAll" = "black",
-                     "UHIIAll" = c("#5385BC","#E34D34"),
+                     "UHIIAll" = c("#66C0E4","#E34D34"),
                      "PrimaryCKD" = c("#CC99BB","#771155"),
                      "PrimaryDiabetes" = c("#77AADD","#114477"),
-                     "UHIICKD" = c("#5385BC","#E34D34","#5385BC","#E34D34"),
-                     "UHIIDiabetes" = c("#5385BC","#E34D34","#5385BC","#E34D34"),
+                     "UHIICKD" = c("#66C0E4","#E34D34","#66C0E4","#E34D34"),
+                     "UHIIDiabetes" = c("#66C0E4","#E34D34","#66C0E4","#E34D34"),
                      "PrimaryRace" = c("#117744","#88CCAA"),
                      "PrimarySex" = c( "#777711","#DDDD77"),
-                     "UHIIRace" = c("#5385BC","#E34D34","#5385BC","#E34D34"),
-                     "UHIISex" = c("#5385BC","#E34D34","#5385BC","#E34D34"),
+                     "UHIIRace" = c("#66C0E4","#E34D34","#66C0E4","#E34D34"),
+                     "UHIISex" = c("#66C0E4","#E34D34","#66C0E4","#E34D34"),
                      "PrimaryAge" = c("#771122", "#AA4455", "#DD7788"),
-                     "UHIIAge" = c("#5385BC","#E34D34","#5385BC","#E34D34","#5385BC","#E34D34")
+                     "UHIIAge" = c("#66C0E4","#E34D34","#66C0E4","#E34D34","#66C0E4","#E34D34")
+                     
+)
+sub_linetypes <- list("PrimaryAll" = 1,
+                     "UHIIAll" = c(2,6),
+                     "PrimaryCKD" = c(1,1),
+                     "PrimaryDiabetes" = c(1,1),
+                     "UHIICKD" = c(2,6,2,6),
+                     "UHIIDiabetes" = c(2,6,2,6),
+                     "PrimaryRace" = c(1,1),
+                     "PrimarySex" = c(1,1),
+                     "UHIIRace" = c(2,6,2,6),
+                     "UHIISex" = c(2,6,2,6),
+                     "PrimaryAge" = c(1,1,1),
+                     "UHIIAge" = c(2,6,2,6,2,6)
                      
 )
 
@@ -99,7 +116,7 @@ ui <- navbarPage("Dashboard",id="tabs",selected="Overall & Subpopulation Results
                                        ),
                                        radioButtons("type", tags$span(style = "font-weight: bold;", "Plot Type:"),
                                                     c("Cumulative (Lags 0-21)" = "pooled",
-                                                      "Lags at 99th %ile" = "lags")
+                                                      "Lags at Extreme Heat" = "lags")
                                        )
                                    )
                             ),
@@ -136,7 +153,6 @@ ui <- navbarPage("Dashboard",id="tabs",selected="Overall & Subpopulation Results
                                        radioButtons("forest_variable", tags$span(style = "font-weight: bold;", "Variable:"),
                                                     c("RR (99th vs. MHP)" = "rr.99",
                                                       "Heat AN (Temp. >= MHP)" = "an.heat",
-                                                      "Heat AF (%)" = "af.heat",
                                                       "Heat AR (per 100k)" = "ar.heat",
                                                       "MHT (\u00b0C)" = "mht"
                                                     )),
@@ -146,7 +162,7 @@ ui <- navbarPage("Dashboard",id="tabs",selected="Overall & Subpopulation Results
                                                     )),
                                        radioButtons("forest_color",tags$span(style = "font-weight: bold;", "Color by MSA Characteristic:"),
                                                     c("None" = "none",
-                                                      "Avg. Temperature" = "avg.temp",
+                                                      "Avg. Ambient Temperature" = "avg.temp",
                                                       "Avg. Temperature Range" = "avg.range",
                                                       "Region" = "region",
                                                       "Climate Type" = "climate")),
@@ -191,7 +207,7 @@ ui <- navbarPage("Dashboard",id="tabs",selected="Overall & Subpopulation Results
                                    box(width=2, title="Options", solidHeader = TRUE,status="primary",
                                        htmlOutput("map_info_text"),
                                        radioButtons("variable", tags$span(style = "font-weight: bold;", "Variable:"),
-                                                    c("Avg. Temperature" = "temp",
+                                                    c("Avg. Ambient Temperature" = "temp",
                                                       "Avg. Temperature Range" = "range",
                                                       "99th Temperature Percentile"="temp.99",
                                                       "# Hospitalizations" = "hosp",
@@ -243,7 +259,7 @@ server <- function(input, output,session) {
         labs = c("0-1,500","1,500-3,000","3,000-4,500","4,500-6,000","6,000-7,500","7,500-9,000","9,000-10,500","10,500-12,000",">12,000")
         rev=T
       } else if (input$variable=="temp") {
-        var = "m.temp"; title = "Average Temp. (\u00b0C)"
+        var = "m.temp"; title = "Mean Temp. (\u00b0C)"
         rev=T
       } else if (input$variable=="range") {
         var = "r.temp"; title = "Temp. Range (\u00b0C)"
@@ -257,7 +273,7 @@ server <- function(input, output,session) {
       
       if (input$variable=="uhiq") {
         pal <- colorFactor(
-          palette = c("#5385BC","lightskyblue1","darksalmon","#E34D34"),
+          palette = c("#66B7D6","#DCF2FA","#FAD0C8","#E34D34"),
           domain = eval(parse(text=paste0("zips_shape$",var))),
           reverse=F
         )
@@ -345,11 +361,6 @@ server <- function(input, output,session) {
           labs <- c("< -250","-250-0","0-250","250-500","500-750","> 750")
         }
         rounding=0
-      } else if (input$forest_variable == "af.heat") {
-        x="heat_af";xmin="heat_af_lower";xmax="heat_af_upper";leg_lab="AF (%)";hover.lab = "AF (95% CI)"
-        bins <- c(-1,-0.1,0,0.1,0.2,0.3,1)
-        labs <- c("< -0.1","-0.1-0.0","0.0-0.1","0.1-0.2","0.2-0.3","> 0.3")
-        rounding=3
       } else if (input$forest_variable == "ar.heat") {
         x="ann_an_rate100k";xmin="ann_an_rate100k_lower";xmax="ann_an_rate100k_upper";leg_lab="AR (per 100k)";hover.lab = "AR (95% CI)"
         bins <- c(-100,-5,0,5,15,25,150)
@@ -468,6 +479,7 @@ server <- function(input, output,session) {
       curves <- curves[lapply(curves, '[[',"group")==input$subpop]
       
       colors  <- eval(parse(text=paste0('sub_palettes$',paste0(input$sub,input$subpop))))
+      ltypes <- eval(parse(text=paste0('sub_linetypes$',paste0(input$sub,input$subpop))))
       
       inds <- c(50,60,70,80,90,99,100)
       
@@ -518,13 +530,10 @@ server <- function(input, output,session) {
           if (input$sub == "Primary" & input$subpop == "All") {
             predvar <- curves[[i]]$tmeancbsa
             indlab <- names(predvar) %in% paste0(inds,".0%")
-            plot(pred,"overall",type="n",
-                 ylim=c(0.9,1.3),xlim=limits,lab=c(6,5,7),axes=F,xlab="",
-                 ylab="RR")
-            ind1 <- pred$predvar<=cen
-            ind2 <- pred$predvar>=cen
-            lines(pred$predvar[ind1],pred$allRRfit[ind1],col=4,lwd=2.5)
-            lines(pred$predvar[ind2],pred$allRRfit[ind2],col=2,lwd=2.5)
+            
+            plot(pred,"overall",type="l",lwd=2.5,col=colors[i],lty=ltypes[i],ylim=c(0.9,1.3),xlim=limits,axes=F,xlab="",
+                 ylab="RR", ci.arg=list(density=20+((i-1)*5),lty=ltypes[i],col=adjustcolor(colors[i],alpha.f=0.2)))
+            
             abline(v=cen,lty=2)
             axis(1,at=predvar[indlab],labels=inds)
             loc = 14.25
@@ -534,8 +543,8 @@ server <- function(input, output,session) {
             mtext(expression(paste(degree, "C")),1,line=3.5,at=loc,col="black",adj=1,cex=1)
             axis(2)
           } else {
-            plot(pred,"overall",type="l",lwd=2.5,col=colors[i],ylim=c(0.9,1.3),xlim=limits,axes=F,xlab="",
-                 ylab="RR", ci.arg=list(density=20,col=adjustcolor(colors[i],alpha.f=0.2)))
+            plot(pred,"overall",type="l",lwd=2.5,col=colors[i],lty=ltypes[i],ylim=c(0.9,1.3),xlim=limits,axes=F,xlab="",
+                 ylab="RR", ci.arg=list(density=20+((i-1)*5),lty=ltypes[i],col=adjustcolor(colors[i],alpha.f=0.25)))
             abline(v=cen,lty=2,col=colors[i])
             predvar <- curves[[i]]$tmeancbsa
             indlab <- names(predvar) %in% paste0(inds,".0%")
@@ -572,14 +581,14 @@ server <- function(input, output,session) {
           if (input$sub != "Primary" && input$subpop != "All") {
             title(main = paste0(input$subpop, ", ", groups[j]))
             legend(x=par("usr")[1]+0.25,y=par("usr")[4], legend=c("Low UHII","High UHII"),
-                   col=colors, lty=1, lwd=2,cex=1,box.lty=0)
+                   col=colors, lty=ltypes, lwd=1.5,cex=1,box.lty=0)
           } else if (input$sub=="Primary") {
             
             legend(x=par("usr")[1]+0.25,y=par("usr")[4], legend=paste0(unlist(lapply(curves, `[`, c('group'))),', ',unlist(lapply(curves, `[`, c('subgroup')))),
-                   col=colors, lty=1, lwd=2,cex=1,box.lty=0)
+                   col=colors,  lty=ltypes, lwd=1.5,cex=1,box.lty=0)
           } else if (input$subpop == "All") {
             legend(x=par("usr")[1]+0.25,y=par("usr")[4], legend=c("Low UHII","High UHII"),
-                   col=colors, lty=1, lwd=2,cex=1,box.lty=0)
+                   col=colors, lty=ltypes, lwd=1.5,cex=1,box.lty=0)
           }
           
         } 
@@ -592,6 +601,7 @@ server <- function(input, output,session) {
       curves <- curves[lapply(curves, '[[',"group")==input$subpop]
       
       colors  <- eval(parse(text=paste0('sub_palettes$',paste0(input$sub,input$subpop))))
+      ltypes  <- eval(parse(text=paste0('sub_linetypes$',paste0(input$sub,input$subpop))))
       
       if (input$sub != "Primary" && input$subpop != "All") {
         groups <- unique(unlist(lapply(curves, '[[',"subgroup")))
@@ -627,20 +637,20 @@ server <- function(input, output,session) {
                  ylab="RR",lwd=2.5,xlab=c(0:21))
           } else {
             
-            plot(pred,"overall",col=colors[i],ylim=c(0.98,1.03),xlim=c(0,21),axes=T,xlab="Lag",
+            plot(pred,"overall",col=colors[i],lty=ltypes[i],ylim=c(0.98,1.03),xlim=c(0,21),axes=T,xlab="Lag",
                  ylab="RR",lwd=2.5,xlab=c(0:21),
-                 ci.arg=list(density=20,col=adjustcolor(colors[i],alpha.f=0.2)))
+                 ci.arg=list(density=20+((i-1)*5),lty=ltypes[i],col=adjustcolor(colors[i],alpha.f=0.25)))
             
             if (input$sub != "Primary" && input$subpop != "All") {
               title(main=paste0(input$subpop, ", ", groups[j]))
               legend(x=par("usr")[1]+0.25,y=par("usr")[4], legend=c("Low UHII","High UHII"),
-                     col=colors, lty=1, lwd=2,cex=1,box.lty=0)
+                     col=colors, lty=ltypes, lwd=1.5,cex=1,box.lty=0)
             } else if (input$sub=="Primary") {
               legend(x=par("usr")[1]+0.25,y=par("usr")[4], legend=paste0(unlist(lapply(curves, `[`, c('group'))),', ',unlist(lapply(curves, `[`, c('subgroup')))),
-                     col=colors, lty=1, lwd=2,cex=1,box.lty=0)
+                     col=colors, lty=ltypes, lwd=1.5,cex=1,box.lty=0)
             } else if (input$subpop == "All") {
               legend(x=par("usr")[1]+0.25,y=par("usr")[4], legend=c("Low UHII","High UHII"),
-                     col=colors, lty=1, lwd=2,cex=1,box.lty=0)
+                     col=colors, lty=ltypes, lwd=1.5,cex=1,box.lty=0)
             }
             
             if (i == length(curves)) {
@@ -663,9 +673,9 @@ server <- function(input, output,session) {
   output$pooled_curve_text <- renderText({
     
     if (input$type == "lags") {
-      type = "Lag-response at the 99th temperature percentile for the association(s) between daily average temperature and daily cardiovascular disease hospitalizations in the urban cores of 120 contiguous US metropolitan areas, 2000-2017."
+      type = "Lag-response at extreme heat (99th temperature percentile) for the association(s) between daily mean ambient temperature and daily cardiovascular disease hospitalizations in the urban cores of 120 contiguous US metropolitan statistical areas, 2000-2017."
     } else {
-      type = "Cumulative exposure-response association(s) between daily average temperature and daily cardiovascular disease hospitalizations in the urban cores of 120 contiguous US metropolitan areas, 2000-2017. The vertical dashed line indicates the location of the minimum hospitalization percentile (MHP)." 
+      type = "The 21-day cumulative exposure-response association(s) between daily mean ambient temperature and daily cardiovascular disease hospitalizations in the urban cores of 120 contiguous US metropolitan statistical areas, 2000-2017. The vertical dashed line indicates the location of the minimum hospitalization percentile (MHP)." 
     }
     
     if (input$subpop == "All") {
@@ -735,8 +745,8 @@ server <- function(input, output,session) {
                                               '<br><b>',hover.lab,":</b> ", format(round(RR,rounding),rounding)," (",
                                               format(round(RR.low,rounding),rounding),", ",
                                               format(round(RR.high,rounding),rounding),")",'<br>',
-                                              '<b>MHP (MHT):</b> ',cen.per.metareg,' (~',round(cen.metareg,1),')'))) +
-      geom_point(position=pd) + 
+                                              '<b>MHP (MHT):</b> ',cen.per.metareg,' (',round(cen.metareg,1),' \u00b0C)'))) +
+      geom_point(position=pd,size=2) + 
       scale_color_manual(values=pal) + 
       geom_errorbar(width=0.1,position=pd) + theme_bw(base_size=10) + 
       geom_hline(yintercept=xline, color='black', linetype='dashed', alpha=.5) +
@@ -785,7 +795,7 @@ server <- function(input, output,session) {
     
     xline=0
     
-    sub_palettes.temp <- sub_palettes; sub_palettes.temp[1] <- "grey55"
+    sub_palettes.temp <- sub_palettes; sub_palettes.temp[1] <- "grey40"
     
     if (input$sub != "Primary") {
       pal <- rev(eval(parse(text=paste0('sub_palettes.temp$',paste0(input$sub,input$subpop)))))
@@ -800,7 +810,7 @@ server <- function(input, output,session) {
                                            '<br><b>',hover.lab,":</b> ", format(round(.data[[y]],rounding),big.mark =',',trim=T),
                                            " (",format(round(.data[[ymin]],rounding),big.mark=',',trim=T),", ",
                                            format(round(.data[[ymax]],rounding),big.mark=',',trim=T),")",
-                                           '<br><b>','MHP (MHT):</b> ',cen.per.metareg,' (~',round(cen.metareg,1),')'))) + 
+                                           '<br><b>','MHP (MHT):</b> ',cen.per.metareg,' (',round(cen.metareg,1),' \u00b0C)'))) + 
       geom_col(alpha=0.85,position=pd) +   geom_errorbar(width=.1,color='black',position=pd) + theme_bw(base_size=10) + 
       scale_fill_manual(values=pal) + 
       geom_hline(yintercept=xline, color='black', linetype='dashed', alpha=.5) +
@@ -851,7 +861,7 @@ server <- function(input, output,session) {
         }
       }
     }
-    caption = paste0(caption," Metrics include the relative risk (RR) at extreme heat (99th temperature percentile compared to the minimum hospitalization percentile [MHP]) and the heat-attributable (temperatures above the MHP) number (AN) / rate (AR) of cardiovascular hospitalizations.")
+    caption = paste0(caption," Metrics include the relative risk (RR) at extreme heat (99th temperature percentile compared to the minimum hospitalization percentile [MHP]) and the heat-attributable (temperatures above the MHP) number (AN) / annual rate (AR) of cardiovascular hospitalizations.")
   })
   
   # Code to render the table of results
@@ -872,7 +882,7 @@ server <- function(input, output,session) {
     
     table <- sub_rr_af_an[sub_rr_af_an$type == input$sub&sub_rr_af_an$group == input$subpop,
                           c("group_lab","n.cbsas","Num_Zips","Total_HAs","temp.99",
-                            "mhp","mht","RR.99.full","Attr_HAs_Heat","AF_All_Heat","Ann_AN_Rate100k","per_HA_xheat")]
+                            "mhp","mht","RR.99.full","Attr_HAs_Heat","Ann_AN_Rate100k")]
     
     table[is.na(table)] <- "-"
     
@@ -892,8 +902,7 @@ server <- function(input, output,session) {
     
     names(table) <- c("Group","# MSAs","# ZIP Codes","# Hospitalizations (% Total)", "99th Temp. Percentile (\u00b0C)",
                       "MHP (95% CI)","MHT (\u00b0C) (95% CI)","RR (99th vs. MHP) (95% CI)",
-                      "AN (Temp. \u2265 MHP) (95% CI)","AF (%) (95% CI)", "AR (Annual, per 100k) (95% CI)",
-                      "AN, % Extreme Temps")
+                      "AN (Temp. \u2265 MHP) (95% CI)", "AR (Annual, per 100k) (95% CI)")
     
     type = "Exposure and outcome information and heat-related cardiovascular risk and burden results"
     if (input$subpop == "All") {
@@ -922,7 +931,7 @@ server <- function(input, output,session) {
       }
     }
     
-    caption = paste0(caption," MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AF = Heat-Attributable Fraction; AR = Heat-Attributable Rate; % Extreme Temps = % of AN due to extreme temperatures (above 97.5th percentile).")
+    caption = paste0(caption," MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AR = Heat-Attributable Rate")
     
     DT::datatable(table,
                   options = list(paging = T,searching = T,dom='t',ordering=T,scrollX = TRUE,
@@ -942,9 +951,9 @@ server <- function(input, output,session) {
   # Bulleted list of the main takeaways
   output$main_takeaway <- renderText({
     "<ul>
-  <li>Higher heat-related risk and burden in high UHII areas</li>
-  <li>Black, female, and older individuals and those with CKD or diabetes had an elevated risk and burden</li>
-  <li>High UHII had a more pronounced impact among already heat-vulnerable subpopulations</li>
+  <li>Notably larger heat-related burden in high UHII areas, attributed to a moderately higher risk</li>
+  <li>Females, individuals aged 75-114, those with CKD, and those with diabetes had an elevated heat-related risk and burden</li>
+  <li>High UHII exacerbated heat-related impacts among already heat-vulnerable subpopulations</li>
   <li>Heat posed a delayed, rather than immediate, threat</li>
   </ul>"
   })
@@ -983,11 +992,11 @@ server <- function(input, output,session) {
     } else if (input$variable=="hosp") {
       part1 = "counts of daily cardiovascular-related hospitalizations among Medicare enrollees (age 65-114)"
     } else if (input$variable == "temp") {
-      part1 = "population-weighted daily average temperature"
+      part1 = "population-weighted daily mean ambient temperature"
     } else if (input$variable == "range") {
-      part1 = "range of population-weighted daily average temperature"
+      part1 = "range of population-weighted daily mean ambient temperature"
     } else if (input$variable == "temp.99") {
-      part1 = "99th percentile of population-weighted daily average temperature"
+      part1 = "99th percentile of population-weighted daily mean ambient temperature"
     } 
     
     if (input$variable%in%c("uhi","uhiq")) {
@@ -1001,7 +1010,7 @@ server <- function(input, output,session) {
     } else {
       part3 = ""
     }
-    part4 = "The light grey shapes delineate the boundaries of the 120 MSAs."
+    part4 = "The light grey shapes delineate the boundaries of the 120 MSAs. The blank areas within the MSA boundaries indicate areas that did overlap an urban core."
     paste("ZIP code-level",part1,part2,part3,part4)
   })
   
@@ -1033,11 +1042,6 @@ server <- function(input, output,session) {
         xlim = c(-4050,12005)
       }
       rounding = 0
-    } else if (input$forest_variable == "af.heat") {
-      x="heat_af";xmin="heat_af_lower";xmax="heat_af_upper";xline=0;alpha.val=1
-      xlab = "Heat-Attributable Fraction [AF] (%, AN/Total Admits)";hover.lab = "AF (95% CI)"
-      xlim = c(-0.95, 0.95)
-      rounding = 3
     } else if (input$forest_variable == "ar.heat") {
       x="ann_an_rate100k";xmin="ann_an_rate100k_lower";xmax="ann_an_rate100k_upper";xline=0;alpha.val=0.85
       xlab = "Heat-Attributable Rate [AR] (per 100,000 beneficiaries)";hover.lab = "AR (95% CI)"
@@ -1094,7 +1098,7 @@ server <- function(input, output,session) {
     
     if (input$forest_type != "Primary") {
       color = "var"
-      pal = c("#5385BC","#E34D34")
+      pal = c("#66C0E4","#E34D34")
       color.lab = ""
       dodge <- position_dodge(0.6)
     } else {
@@ -1149,7 +1153,7 @@ server <- function(input, output,session) {
       } else {
         if (input$forest_type == "UHII") {
           forest.temp <- ggplot(data=forest.data.simp, 
-                                aes(y=CBSA.f,x=.data[[x]], xmin=.data[[xmin]], xmax=.data[[xmax]],color=.data[[color]],
+                                aes(y=CBSA.f,x=.data[[x]], xmin=.data[[xmin]], xmax=.data[[xmax]],color=.data[[color]],shape=.data[[color]],
                                     text = paste0("<b>MSA: </b>",CBSA.f,"<br>",
                                                   "<b>UHII Level:</b> ",ifelse(.data[[color]]=="UHII-Q1","Low UHII","High UHII"),
                                                   '<br><b>',hover.lab,":</b> ", format(round(.data[[x]],rounding),rounding)," (",
@@ -1177,7 +1181,12 @@ server <- function(input, output,session) {
           theme(axis.title.y = element_blank()) +
           xlab(xlab)
       } else {
-        forest.temp <- forest.temp + geom_col() + 
+        if (input$forest_color == 'none') {
+          forest.temp <- forest.temp + geom_col(fill='grey40') 
+        } else {
+          forest.temp <- forest.temp + geom_col()
+        }
+        forest.temp <- forest.temp +
           geom_errorbarh(height=2,size=tck_size,color='black') + theme_bw(base_size=10) + 
           geom_vline(xintercept=xline, color='black', linetype='dashed', alpha=.5) +
           theme(axis.title.y = element_blank()) +
@@ -1186,12 +1195,12 @@ server <- function(input, output,session) {
       
     } else {
       if (input$forest_type == "UHII") {
-        forest.temp <- forest.temp + geom_point(position=dodge) + 
+        forest.temp <- forest.temp + geom_point(position=dodge,size=2) + 
           geom_errorbarh(height=2,size=tck_size,position=dodge) + theme_bw(base_size=10) + 
           theme(axis.title.y = element_blank()) +
           xlab(xlab)
       } else {
-        forest.temp <- forest.temp + geom_point() + 
+        forest.temp <- forest.temp + geom_point(size=2) + 
           geom_errorbarh(height=2,size=tck_size) + theme_bw(base_size=10) + 
           theme(axis.title.y = element_blank()) +
           xlab(xlab)
@@ -1372,12 +1381,14 @@ server <- function(input, output,session) {
       if (length(idx) == 2) {
         preds <- list(CBSA.preds[["UHII-Q1"]][[idx[1]]],CBSA.preds[["UHII-Q4"]][[idx[2]]])
         predvars <- list(CBSA.tmeans[["UHII-Q1"]][[idx[1]]],CBSA.tmeans[["UHII-Q4"]][[idx[2]]])
-        colors <- c("#5385BC","#E34D34")
+        colors <- c("#66C0E4","#E34D34")
+        ltypes <- c(2,6)
         curr_min=100;curr_max=0
       } else {
         preds <- list(CBSA.preds[["UHII-Q1"]][[idx]])
         predvars <- list(CBSA.tmeans[["UHII-Q1"]][[idx]])
-        colors <- c("#5385BC")
+        colors <- c("#66C0E4")
+        ltypes <- c(2)
         curr_min=100;curr_max=0
         
       }
@@ -1401,14 +1412,9 @@ server <- function(input, output,session) {
       
       
       if (input$forest_type == "Primary") {
-        plot(pred,"overall",type="n",
-             ylim=c(0.5,1.5),xlim=limits,lab=c(6,5,7),axes=F,xlab="",
-             ylab="RR")
-        ind1 <- pred$predvar<=cen
-        ind2 <- pred$predvar>=cen
+        plot(pred,"overall",type="l",lwd=2.5,col='black',ylim=c(0.5,1.5),xlim=limits,axes=F,xlab="",
+             ylab="RR", ci.arg=list(density=20+((i-1)*5),col=adjustcolor('black',alpha.f=0.25)))
         
-        lines(pred$predvar[ind1],pred$allRRfit[ind1],col=4,lwd=2.5)
-        lines(pred$predvar[ind2],pred$allRRfit[ind2],col=2,lwd=2.5)
         abline(v=cen,lty=2)
         axis(1,at=predvar[indlab],labels=inds)
         loc = par("usr")[1]-0.05*diff(par("usr")[1:2])
@@ -1421,8 +1427,8 @@ server <- function(input, output,session) {
         axis(2)
       } else {
         
-        plot(pred,"overall",type="l",lwd=2.5,col=colors[i],ylim=c(0.5,1.5),xlim=limits,axes=F,xlab="",
-             ylab="RR", ci.arg=list(density=20,col=adjustcolor(colors[i],alpha.f=0.2)))
+        plot(pred,"overall",type="l",lwd=2.5,col=colors[i],lty=ltypes[i],ylim=c(0.5,1.5),xlim=limits,axes=F,xlab="",
+             ylab="RR", ci.arg=list(density=20+((i-1)*5),lty=ltypes[i],col=adjustcolor(colors[i],alpha.f=0.25)))
         abline(v=cen,lty=2,col=colors[i])
         
         if (i != 1) {axis(1,at=predvar[indlab],labels=NA,col=NA,col.ticks=colors[i],tck=-0.03); tckcol = NA} else { tckcol = colors[i]}
@@ -1450,7 +1456,7 @@ server <- function(input, output,session) {
           if (length(preds) == 2) { leg = c("Low UHII","High UHII")} else { leg = c("Low UHII")}
           
           legend(x=par("usr")[1]+0.25,y=par("usr")[4], legend=leg,
-                 col=colors, lwd=2,cex=1,box.lty=0)
+                 col=colors, lty=ltypes,lwd=1.5,cex=1,box.lty=0)
           
           par(new = F)
         } else {
@@ -1491,7 +1497,6 @@ server <- function(input, output,session) {
     
     table$per_x_heat <- paste0(round((table$x_heat_an/table$heat_an)*100,1),"")
     table$RR.99 <- paste0(format(round(table$RR.99,3),3), " (",format(round(table$RR.99.low,3),3),", ",format(round(table$RR.99.high,3),3),")")
-    table$heat_af <- paste0(format(round(table$heat_af,3),3), " (",format(round(table$heat_af_lower,3),3),", ",format(round(table$heat_af_upper,3),3),")")
     table$heat_an <- paste0(format(round(table$heat_an,0),big.mark=',',trim=T), " (",
                             format(round(table$heat_an_lower,0),big.mark=',',trim=T),", ",
                             format(round(table$heat_an_upper,0),big.mark=',',trim=T),")")
@@ -1533,13 +1538,13 @@ server <- function(input, output,session) {
     table <- data.frame(label=colnames(table),data=t(table))
     
     table <- table[c("n.zips","tot_hosp_per_lab","temp.99",
-                     "mhp","mht","RR.99","heat_an","heat_af","heat_ar"),]
+                     "mhp","mht","RR.99","heat_an","heat_ar"),]
     
     rownames(table) <- NULL
     
     table$label <- c("<b># ZIP Codes</b>","<b># Hospitalizations (% Total)</b>","<b>99th Temp. %ile (\u00b0C)</b>",
                      "<b>MHP (95% CI)</b>","<b>MHT (\u00b0C) (95% CI)</b>","<b>RR (99th vs. MHP) (95% CI)</b>",
-                     "<b>AN (Temp. \u2265 MHP) (95% CI)</b>","<b>AF (%) (95% CI)</b>","<b> AR (Annual, per 100k) (95% CI)</b>")
+                     "<b>AN (Temp. \u2265 MHP) (95% CI)</b>","<b> AR (Annual, per 100k) (95% CI)</b>")
     
     if (input$forest_type=="Primary") {
       caption = paste0('Exposure and outcome information and heat-related cardiovascular risk and burden results for ',input$cbsa_choice,', 2000-2017.')
@@ -1558,7 +1563,7 @@ server <- function(input, output,session) {
                       " and has a climate type of: ", 
                       unique(cbsa_all[cbsa_all$CBSA.Title==input$cbsa_choice & cbsa_all$group == input$forest_type,]$Koppen.Description))
     
-    caption <- paste0(caption, ". MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AF = Heat-Attributable Fraction; AR = Heat-Attributable Rate.")
+    caption <- paste0(caption, ". MSA = Metropolitan Statistical Area; MHP = Minimum Hospitalization Percentile; MHT = Minimum Hospitalization Temperature; RR = Relative Risk; AN = Heat-Attributable Number; AR = Heat-Attributable Rate.")
     DT::datatable(table, 
                   options = list(paging = FALSE,searching = FALSE,dom='t',ordering=F),
                   
@@ -1578,8 +1583,8 @@ server <- function(input, output,session) {
   # Bulleted list of key takeaways
   output$msa_takeaway <- renderText({
     "<ul>
-  <li>Significant variation in the MSA-level risk and burden, overall and by UHII level</li>
-  <li>No clear geographic pattern for which MSAs had the highest heat-related risk and burden</li>
+  <li>Considerable variation in the MSA-level risk and burden, overall and by UHII level</li>
+  <li>No clear geographic, regional, or climactic trend for which MSAs had the highest heat-related risk and burden</li>
   <li>Overall: 66% of MSAs had a RR (99th vs. MHP) > 1 </li>
   <li>Low UHII: 60% of MSAs had a RR (99th vs. MHP) > 1 </li>
   <li>High UHII: 78% of MSAs had a RR (99th vs. MHP) > 1 </li>
@@ -1594,17 +1599,17 @@ server <- function(input, output,session) {
   output$about_text <- renderText({
     paste0(
       "This dashboard is associated with the manuscript <b><i>Urban Heat Island Impacts on Heat-Related Cardiovascular Morbidity: A Time Series Analysis of Older Adults in US Metropolitan Areas</i></b>.",
-      " It allows for interaction with the manuscript's primary results - the heat-related cardiovascular risk and burden across the urban cores of 120 contiguous US metropolitan statistical areas (MSAs), 2000-2017. The results are available for the entire study population, different subpopulations, and in low and high urban heat island intensity (UHII) areas ('Overall & Subpopulation Results' tab).",
+      " It allows for interaction with the manuscript's primary results - the heat-related cardiovascular risk and burden, in areas experiencing urban heat islands (UHIs) compared to those not experiencing UHIs, in 120 contiguous US metropolitan statistical areas (MSAs), 2000-2017. The results are available for the entire study population, different subpopulations (by age, sex, race, and chronic condition status), and in low and high UHI intensity (UHII) areas ('Overall & Subpopulation Results' tab).",
       " It also allows for interaction with the MSA-level risk and burden, overall and in low and high UHII areas ('MSA-Specific Results' tab).", 
       " All results can be downloaded on their respective tabs.",
       " Additionally, users can explore the ZIP code-level temperature, UHII, and Medicare hospitalization data used in the analyses ('Exposure & Outcome Maps').",
       "<br><br>",
       "Details on the datasets and methods used as well as a discussion of all results and sensitivity analyses can be found in the associated manuscript.",
       "<br><br>",
-      "For any questions, please email: <a href='mailto:cleland.stephanie@epa.gov'>cleland.stephanie@epa.gov</a> or <a href='mailto:rappold.ana@epa.gov'>rappold.ana@epa.gov</a>.",
+      "For any questions, please email: <a href='mailto:rappold.ana@epa.gov'>rappold.ana@epa.gov</a>.",
       "<br><br>",
       "<b>Abstract</b>",
-      "<br>Many people in the United States (US) reside in cities experiencing urban heat islands (UHIs) and climate change-driven temperature increases. Extreme heat has been linked to increased cardiovascular disease (CVD) risk, yet little is known about how this association varies between cities or with UHI intensity (UHII) within cities. We aimed to identify the urban populations most at-risk of and burdened by heat-related CVD morbidity while considering the role of UHII. ZIP code-level daily counts of CVD hospitalizations among Medicare enrollees, aged 65-114, were obtained for 120 US metropolitan statistical areas (MSAs) between 2000-2017. Local average temperatures were estimated by interpolating daily weather station observations. ZIP codes were stratified into low and high UHII areas using the first and fourth UHII quartiles, each with 25% of all hospitalizations. MSA-specific associations between temperature and hospitalization were estimated using quasi-Poisson regression with distributed lag non-linear models and pooled via multivariate meta-analyses. Stratified analyses were performed by age, sex, race, and chronic condition status in low and high UHII areas. We also calculated the heat-attributable CVD burden. Extreme heat (MSA-specific 99th percentile, ~28.6C) increased CVD hospitalization risk by 1.5% (95% CI: 0.4%, 2.6%), with considerable variation among MSAs. Between 2000-2017, there were an estimated 37,028 (95% CI: 35,741, 37,988) heat-attributable admissions, with most due to extreme temperatures. Risk in high UHII areas (2.4% [95% CI: 0.4%, 4.3%]) exceeded that in low UHII areas (1.0% [95% CI: -0.8%, 2.8%]). High UHII areas accounted for 35% of the total heat-related burden and disproportionately impacted already heat-vulnerable populations. The most at-risk and burdened populations were females, individuals aged 75-114, and those with chronic kidney disease or diabetes living in high UHII areas. Overall, extreme heat increased cardiovascular morbidity risk and burden among older urban populations. UHIs exacerbated these heat-related impacts, especially among those with existing vulnerabilities.",
+      "<br>Many United States (US) cities are experiencing urban heat islands (UHIs) and climate change-driven temperature increases. Extreme heat increases cardiovascular disease (CVD) risk, yet little is known about how this association varies with UHI intensity (UHII) within and between cities. We aimed to identify the urban populations most at-risk of and burdened by heat-related CVD morbidity in UHI-affected areas compared to unaffected areas. ZIP code-level daily counts of CVD hospitalizations among Medicare enrollees, aged 65-114, were obtained for 120 US metropolitan statistical areas (MSAs) between 2000-2017. Mean ambient temperature exposure was estimated by interpolating daily weather station observations. ZIP codes were classified as low and high UHII using the first and fourth quartiles of an existing surface UHII metric, weighted to each have 25% of all CVD hospitalizations. MSA-specific associations between ambient temperature and CVD hospitalization were estimated using quasi-Poisson regression with distributed lag non-linear models and pooled via multivariate meta-analyses. Across the US, extreme heat (MSA-specific 99th percentile, on average 28.6 \u00b0C) increased the risk of CVD hospitalization by 1.5% (95% CI: 0.4%, 2.6%), with considerable variation among MSAs. Extreme heat-related CVD hospitalization risk in high UHII areas (2.4% [95% CI: 0.4%, 4.3%]) exceeded that in low UHII areas (1.0% [95% CI: -0.8%, 2.8%]), with upwards of a 10% difference in some MSAs. During the 18-year study period, there were an estimated 37,028 (95% CI: 35,741, 37,988) heat-attributable CVD admissions. High UHII areas accounted for 35% of the total heat-related CVD burden, while low UHII areas accounted for 4%. High UHII disproportionately impacted already heat-vulnerable populations; females, individuals aged 75-114, and those with chronic conditions living in high UHII areas experienced the largest heat-related CVD impacts. Overall, extreme heat increased cardiovascular morbidity risk and burden in older urban populations, with UHIs exacerbating these impacts among those with existing vulnerabilities.",
       "<br><br>",
       "<b>Authors:</b> Stephanie E. Cleland, William Steinhardt, Lucas M. Neas, J. Jason West, Ana G. Rappold"
     )  
